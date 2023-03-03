@@ -1,5 +1,7 @@
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "io_utils.h"
 #include "pe_file.h"
@@ -26,11 +28,14 @@ int main(int argc, char** argv) {
         fprintf(stdout, "%s", read_status_msgs_en[READ_OK]);
     } else {
         fprintf(stderr, "%s", read_status_msgs_en[read_status]);
-        return false;
+        return read_status;
     }
 
-    enum read_status read_status =
-        read_file(argv[1], read_pe_section, &pe_file);
+    struct PESection pe_section;
+    pe_section.name = argv[2];
+    pe_section.pe_file = &pe_file;
+
+    read_status = read_file(argv[1], read_pe_section, &pe_section);
 
     if (read_status == READ_OK) {
         fprintf(stdout, "%s", read_status_msgs_en[READ_OK]);
@@ -40,7 +45,7 @@ int main(int argc, char** argv) {
     }
 
     enum write_status write_status =
-        write_file(argv[3], write_pe_file, &pe_file);
+        write_file(argv[3], write_pe_section, &pe_section);
 
     if (write_status == WRITE_OK) {
         fprintf(stdout, "%s", write_status_msgs_en[WRITE_OK]);
@@ -48,4 +53,7 @@ int main(int argc, char** argv) {
         fprintf(stderr, "%s", write_status_msgs_en[write_status]);
         return false;
     }
+
+    free(pe_file.section_headers);
+    free(pe_section.data);
 }

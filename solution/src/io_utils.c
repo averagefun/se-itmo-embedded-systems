@@ -27,7 +27,7 @@ enum read_status read_file(const char* input_path, my_reader* reader,
 }
 
 enum write_status write_file(const char* output_path, my_writer* writer,
-                             void* content, char* key) {
+                             void* content) {
     FILE* output_file = fopen(output_path, "wb");
     if (!output_file) {
         return WRITE_INVALID_FILE;
