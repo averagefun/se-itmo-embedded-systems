@@ -1,3 +1,6 @@
+/// @file
+/// @brief Implements input-output operation utils
+
 #include "io_utils.h"
 
 #define READ_ERROR_STRING(ERR) "Error while reading from file: " #ERR "!\n"

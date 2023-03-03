@@ -1,3 +1,6 @@
+/// @file
+/// @brief File describe some structs and provide IO operations with PE files
+
 #include "pe_file.h"
 
 #include <malloc.h>
@@ -6,6 +9,7 @@
 
 #define MS_DOS_STUB_OFFSET 0x3c
 
+/// Structure containing section header
 struct
 #ifdef __clang__
     __attribute__((packed))
@@ -30,6 +34,12 @@ struct
 #pragma pack(pop)
 #endif
 
+/// @brief Get SectionHeader* by name
+///
+/// @param section_headers Pointer to section_headers
+/// @param n Number of sections
+/// @param by_name Section name
+/// @return struct SectionHeader*
 static struct SectionHeader* get_section(struct SectionHeader* section_headers,
                                          size_t n, char* by_name) {
     for (size_t i = 0; i < n; i++) {
@@ -40,6 +50,11 @@ static struct SectionHeader* get_section(struct SectionHeader* section_headers,
     return NULL;
 }
 
+/// @brief Read the beginning of PE file and fill PEFile* struct
+///
+/// @param source Source PE file
+/// @param content PEFile* struct to fill
+/// @return enum read_status
 enum read_status read_pe_file(FILE* source, void* content) {
     if (source == NULL && content == NULL) {
         return READ_INVALID_FILE;
@@ -77,8 +92,16 @@ enum read_status read_pe_file(FILE* source, void* content) {
     return READ_OK;
 }
 
+/// @brief Destroy memory allocated in PEFile*
+///
+/// @param pe_file PE File to destroy
 void pe_file_destroy(struct PEFile* pe_file) { free(pe_file->section_headers); }
 
+/// @brief Read section of pe file
+///
+/// @param source Source PE file
+/// @param content PESection* struct that'll fill with data
+/// @return enum read_status
 enum read_status read_pe_section(FILE* source, void* content) {
     if (source == NULL && content == NULL) {
         return READ_INVALID_FILE;
@@ -106,10 +129,18 @@ enum read_status read_pe_section(FILE* source, void* content) {
     return READ_OK;
 }
 
+/// @brief Destroy memory allocated in PESection*
+///
+/// @param pe_section Section to destroy
 void pe_section_destroy(struct PESection* pe_section) {
     free(pe_section->data);
 }
 
+/// @brief Write section to file
+///
+/// @param output File to write section
+/// @param content PESection* struct that contains section data
+/// @return enum write_status
 enum write_status write_pe_section(FILE* output, void* content) {
     if (output == NULL && content == NULL) {
         return WRITE_INVALID_FILE;
