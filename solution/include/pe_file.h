@@ -5,7 +5,15 @@
 
 #include "io_utils.h"
 
-struct __attribute__((packed)) PEHeader {
+struct
+#ifdef __clang__
+    __attribute__((packed))
+#elif defined __GNUC__
+    __attribute__((packed))
+#elif defined _MSC_VER
+#pragma pack(push, 1)
+#endif
+    PEHeader {
     uint16_t machine;
     uint16_t number_of_sections;
     uint32_t time_date_stamp;
@@ -14,19 +22,11 @@ struct __attribute__((packed)) PEHeader {
     uint16_t size_of_optional_header;
     uint16_t characteristics;
 };
+#ifdef _MSC_VER
+#pragma pack(pop)
+#endif
 
-struct __attribute__((packed)) SectionHeader {
-    char name[8];
-    uint32_t virtual_size;
-    uint32_t virtual_address;
-    uint32_t size_of_raw_data;
-    uint32_t pointer_to_raw_data;
-    uint32_t pointer_to_relocations;
-    uint32_t pointer_to_linenumbers;
-    uint16_t number_of_relocations;
-    uint16_t number_of_linenumbers;
-    uint32_t characteristics;
-};
+struct SectionHeader;
 
 // Structure containing PE file data
 struct PEFile {
@@ -45,13 +45,17 @@ struct PEFile {
 
 struct PESection {
     char* name;
-    struct PEFile* pe_file;
-    struct SectionHeader section_header;
+    uint32_t size;
     char* data;
+    struct PEFile* pe_file;
 };
 
 my_reader read_pe_file;
+void pe_file_destroy(struct PEFile* pe_file);
+
 my_reader read_pe_section;
+void pe_section_destroy(struct PESection* pe_section);
+
 my_writer write_pe_section;
 
 #endif

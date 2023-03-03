@@ -6,6 +6,30 @@
 
 #define MS_DOS_STUB_OFFSET 0x3c
 
+struct
+#ifdef __clang__
+    __attribute__((packed))
+#elif defined __GNUC__
+    __attribute__((packed))
+#elif defined _MSC_VER
+#pragma pack(push, 1)
+#endif
+    SectionHeader {
+    char name[8];
+    uint32_t virtual_size;
+    uint32_t virtual_address;
+    uint32_t size_of_raw_data;
+    uint32_t pointer_to_raw_data;
+    uint32_t pointer_to_relocations;
+    uint32_t pointer_to_linenumbers;
+    uint16_t number_of_relocations;
+    uint16_t number_of_linenumbers;
+    uint32_t characteristics;
+};
+#ifdef _MSC_VER
+#pragma pack(pop)
+#endif
+
 static struct SectionHeader* get_section(struct SectionHeader* section_headers,
                                          size_t n, char* by_name) {
     for (size_t i = 0; i < n; i++) {
@@ -23,7 +47,6 @@ enum read_status read_pe_file(FILE* source, void* content) {
 
     struct PEFile* pe_file = (struct PEFile*)content;
 
-    // fseek -> 0 if success
     if (fseek(source, MS_DOS_STUB_OFFSET, SEEK_SET))
         return READ_INVALID_SIGNATURE;
 
@@ -54,6 +77,8 @@ enum read_status read_pe_file(FILE* source, void* content) {
     return READ_OK;
 }
 
+void pe_file_destroy(struct PEFile* pe_file) { free(pe_file->section_headers); }
+
 enum read_status read_pe_section(FILE* source, void* content) {
     if (source == NULL && content == NULL) {
         return READ_INVALID_FILE;
@@ -71,14 +96,18 @@ enum read_status read_pe_section(FILE* source, void* content) {
     if (fseek(source, (intptr_t)section_header->pointer_to_raw_data, SEEK_SET))
         return READ_INVALID_SIGNATURE;
 
-    void* raw_data = malloc(section_header->size_of_raw_data);
+    char* raw_data = malloc(section_header->size_of_raw_data);
     if (fread(raw_data, section_header->size_of_raw_data, 1, source) != 1)
         return READ_INVALID_HEADER;
 
-    pe_section->section_header = *section_header;
+    pe_section->size = section_header->size_of_raw_data;
     pe_section->data = raw_data;
 
     return READ_OK;
+}
+
+void pe_section_destroy(struct PESection* pe_section) {
+    free(pe_section->data);
 }
 
 enum write_status write_pe_section(FILE* output, void* content) {
@@ -88,8 +117,7 @@ enum write_status write_pe_section(FILE* output, void* content) {
 
     struct PESection* pe_section = (struct PESection*)content;
 
-    fwrite(pe_section->data, pe_section->section_header.size_of_raw_data, 1,
-           output);
+    fwrite(pe_section->data, pe_section->size, 1, output);
 
     // ferror -> 0 if success
     if (ferror(output) != 0) {
