@@ -65,30 +65,29 @@ enum read_status read_pe_file(FILE* source, void* content) {
         return READ_INVALID_SIGNATURE;
     }
 
-        return READ_OK;
+    return READ_OK;
 }
 
-enum write_status write_pe_file(FILE* source, FILE* output, void* content,
-                                char* key) {
+enum read_status read_pe_section(FILE* source, void* content) {
+    if (source == NULL && content == NULL) {
+        return READ_INVALID_FILE;
+    }
+
+    struct PESection* pe_section = (struct PESection*)content;
+
+    struct SectionHeader* section_header = get_section(pe_section->);
+}
+
+enum write_status write_pe_section(FILE* output, void* content) {
     if (output == NULL && content == NULL) {
         return WRITE_INVALID_FILE;
     }
 
     struct PEFile* pe_file = (struct PEFile*)content;
 
-    struct SectionHeader* section_header = get_section(
-        pe_file->section_headers, pe_file->header.number_of_sections, key);
-
     if (section_header == NULL) {
         return WRITE_HEADER_FAILED;
     }
-
-    if (fseek(source, section_header->pointer_to_raw_data, SEEK_SET))
-        return WRITE_HEADER_FAILED;
-
-    void* raw_data = malloc(section_header->size_of_raw_data);
-    if (fread(raw_data, section_header->size_of_raw_data, 1, source) != 1)
-        return WRITE_DATA_FAILED;
 
     fwrite(raw_data, section_header->size_of_raw_data, 1, output);
 

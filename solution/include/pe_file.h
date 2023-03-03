@@ -32,6 +32,11 @@ struct PEFile {
     ///@}
 };
 
+struct PESection {
+    struct PEFile* pe_file;
+    struct SectionHeader* section_header;
+};
+
 my_reader read_pe_file;
 my_writer write_pe_file;
 

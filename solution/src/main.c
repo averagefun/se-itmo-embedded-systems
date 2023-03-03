@@ -29,6 +29,16 @@ int main(int argc, char** argv) {
         return false;
     }
 
+    enum read_status read_status =
+        read_file(argv[1], read_pe_section, &pe_file);
+
+    if (read_status == READ_OK) {
+        fprintf(stdout, "%s", read_status_msgs_en[READ_OK]);
+    } else {
+        fprintf(stderr, "%s", read_status_msgs_en[read_status]);
+        return false;
+    }
+
     enum write_status write_status =
         write_file(argv[3], write_pe_file, &pe_file);
 
