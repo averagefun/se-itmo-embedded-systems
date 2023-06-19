@@ -1,0 +1,8 @@
+.vscode
+
+doxygen.log
+/html
+
+/build
+/out
+*.html
